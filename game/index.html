@@ -71,6 +71,7 @@
       <span>📅 Hari <b id="day">1</b></span>
       <span>✅ Sajian <b id="served">0</b></span>
     </div>
+    <button class="btn grey" id="pauseBtn" style="padding:6px 12px;font-size:14px">⏸️ Jeda (P)</button>
   </header>
   <div id="shiftLabel">⏱️ Timer Shift: <span id="shiftTime">120</span> detik</div>
   <div id="shiftBarWrap"><div id="shiftBar"></div></div>
@@ -108,6 +109,7 @@
     <p>🍚 <b>Nasi Goreng</b> = Nasi + Telur + Bumbu + Sayur &nbsp;|&nbsp; 🍜 <b>Mie Goreng</b> = Mie + Telur + Bumbu + Ayam<br>🍢 <b>Sate Ayam</b> = Ayam + Bumbu + Sayur &nbsp;|&nbsp; 🍲 <b>Soto Ayam</b> = Ayam + Nasi + Sayur + Bumbu + Telur</p>
     <p>Target hari ini: <b>150 koin dalam 120 detik</b>. Pesanan kadaluarsa atau sajian salah mengurangi ⭐. Combo berturut-turut menaikkan koin!</p>
     <p>Keyboard: <kbd>1</kbd>–<kbd>6</kbd> bahan, <kbd>Space</kbd> sajikan, <kbd>P</kbd> pause, <kbd>R</kbd> restart. Mouse: klik semuanya.</p>
+    <p>💡 Tips: tekan <kbd>P</kbd> kapan saja untuk jeda — tombol ⏸️ Jeda juga ada di kanan atas layar, di samping skor.</p>
     <button class="btn" id="startBtn" style="font-size:20px;padding:14px 28px">▶️ Mulai Shift (120 detik)</button>
   </div>
 </div>
@@ -246,6 +248,7 @@ function serve(){
   state.selected=null; state.plate=[]; state.cooked=false; state.cookProgress=0;
   msg('🎉 '+o.recipe.dish+' disajikan! +'+earned+' koin (combo x'+mult+')');
   log('Disajikan: '+o.recipe.dish+' ke '+o.cust+' — +'+earned+' koin.');
+  if(state.combo===3) log('🔥 Combo x4! Tiga sajian berturut-turut tanpa kesalahan — pelanggan makin senang!');
   sfx('serve'); spawnOrder(); render();
   if(state.coins>=state.target) endGame(true);
 }
@@ -289,6 +292,7 @@ $('startBtn').addEventListener('click',startGame);
 $('restartBtn').addEventListener('click',startGame);
 $('restartBtn2').addEventListener('click',startGame);
 $('resumeBtn').addEventListener('click',()=>{state.paused=false;$('pauseScreen').classList.add('hidden');});
+$('pauseBtn').addEventListener('click',()=>{ if(state&&state.running){ state.paused=!state.paused; $('pauseScreen').classList.toggle('hidden',!state.paused); } });
 $('cookBtn').addEventListener('click',cook);
 $('serveBtn').addEventListener('click',serve);
 $('clearBtn').addEventListener('click',()=>{state.plate=[];state.cooked=false;state.cookProgress=0;render();});

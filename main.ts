@@ -18,6 +18,12 @@ import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
+const handInGame = join(here, 'game', 'index.html');
+const handInShots = join(here, 'screenshots');
+if (!existsSync(handInGame)) throw new Error('Dapur Kilat hand-in gagal: game/index.html tidak ditemukan di folder entri ini.');
+if (!existsSync(handInShots)) throw new Error('Dapur Kilat hand-in gagal: folder screenshots/ tidak ditemukan di folder entri ini.');
+if (!existsSync(join(here, 'vendor', 'makefun-game.ts'))) throw new Error('Dapur Kilat hand-in gagal: vendor/makefun-game.ts tidak ditemukan di folder entri ini.');
+
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
 mkdirSync(out, { recursive: true });
