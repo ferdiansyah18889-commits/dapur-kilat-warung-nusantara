@@ -1,0 +1,6 @@
+[
+  { "name": "01-kitchen-order-board.png", "query": "?shot=start&seed=1" },
+  { "name": "02-ingredients-counter.png", "query": "?shot=play&seed=1" },
+  { "name": "03-dish-mid-assembly.png", "query": "?shot=play&seed=1" },
+  { "name": "04-timer-plate-ready.png", "query": "?shot=end&seed=1" }
+]

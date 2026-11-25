@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dapur Kilat — Warung Nusantara</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#2b1a12;color:#fff;min-height:100vh}
+  #app{max-width:1100px;margin:0 auto;padding:10px 14px 20px}
+  header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;background:#7b2d12;border:3px solid #f59e0b;border-radius:14px;padding:10px 14px}
+  header h1{font-size:24px}
+  header h1 small{display:block;font-size:13px;font-weight:400;color:#fde68a}
+  .hud{display:flex;gap:14px;flex-wrap:wrap;font-weight:700;font-size:15px}
+  .hud span{background:#451a03;border-radius:8px;padding:4px 10px}
+  #shiftBarWrap{height:14px;background:#451a03;border-radius:8px;overflow:hidden;margin:10px 0}
+  #shiftBar{height:100%;width:100%;background:linear-gradient(90deg,#22c55e,#f59e0b,#ef4444);transition:width .5s linear}
+  #shiftLabel{font-weight:700;text-align:center;margin-bottom:6px}
+  /* Order board */
+  #orderBoard{background:#fef3c7;color:#451a03;border:4px solid #92400e;border-radius:14px;padding:10px}
+  #orderBoard h2{font-size:18px;margin-bottom:8px}
+  #orders{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .order{background:#fff;border:3px solid #d97706;border-radius:12px;padding:10px;cursor:pointer;position:relative}
+  .order.selected{border-color:#16a34a;box-shadow:0 0 0 3px #86efac;background:#f0fdf4}
+  .order .cust{font-size:34px}
+  .order .dish{font-weight:800;font-size:17px}
+  .order .recipe{font-size:22px;letter-spacing:2px;margin:6px 0}
+  .order .otimer{height:10px;background:#e7e5e4;border-radius:6px;overflow:hidden}
+  .order .otimer i{display:block;height:100%;background:#22c55e}
+  .order .otimer.low i{background:#ef4444}
+  .order .badge{position:absolute;top:6px;right:8px;background:#dc2626;color:#fff;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:800}
+  /* Kitchen */
+  #kitchen{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .panel{background:#78350f;border:3px solid #f59e0b;border-radius:14px;padding:12px}
+  .panel h2{font-size:18px;margin-bottom:8px}
+  #ingredients{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .ing{background:#fff7ed;color:#451a03;border:3px solid #d97706;border-radius:12px;padding:10px 4px;text-align:center;cursor:pointer;font-weight:700}
+  .ing:hover{transform:scale(1.04)}
+  .ing .ic{font-size:34px;display:block}
+  .ing .key{background:#451a03;color:#fff;border-radius:6px;padding:1px 7px;font-size:12px}
+  #plateArea{text-align:center}
+  #plate{font-size:56px;min-height:70px;background:#fff7ed;border-radius:50%;width:150px;height:150px;margin:6px auto;display:flex;align-items:center;justify-content:center;border:4px dashed #d97706;color:#451a03;flex-wrap:wrap}
+  #plateContents{font-size:26px;min-height:32px}
+  #cookBarWrap{height:14px;background:#451a03;border-radius:8px;overflow:hidden;margin:8px 0}
+  #cookBar{height:100%;width:0%;background:#f97316}
+  .btn{background:#16a34a;color:#fff;border:none;border-radius:10px;padding:12px 18px;font-size:17px;font-weight:800;cursor:pointer;margin:4px}
+  .btn:hover{filter:brightness(1.1)}
+  .btn.warn{background:#ea580c}.btn.grey{background:#57534e}.btn.blue{background:#2563eb}
+  #msg{min-height:28px;text-align:center;font-weight:800;font-size:17px;margin-top:8px;color:#fde68a}
+  #log{background:#1c0a00;border-radius:10px;padding:8px 12px;margin-top:10px;font-size:14px;min-height:44px}
+  kbd{background:#fff;color:#111;border-radius:4px;padding:1px 6px;font-weight:700}
+  /* Overlays */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:10}
+  .overlay .card{background:#fef3c7;color:#451a03;border-radius:18px;padding:28px;max-width:560px;width:92%;text-align:center;border:4px solid #f59e0b}
+  .overlay h2{font-size:30px;margin-bottom:10px}
+  .overlay p{margin:8px 0;line-height:1.5}
+  .hidden{display:none!important}
+  .shake{animation:shake .3s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  @media(max-width:700px){#orders{grid-template-columns:1fr}#kitchen{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🍳 Dapur Kilat <small>Warung Nusantara — masak cepat, pelanggan senang!</small></h1>
+    <div class="hud">
+      <span>⭐ <b id="stars">3</b></span>
+      <span>💰 <b id="coins">0</b> / <b id="target">150</b></span>
+      <span>🔥 Combo <b id="combo">x1</b></span>
+      <span>📅 Hari <b id="day">1</b></span>
+      <span>✅ Sajian <b id="served">0</b></span>
+    </div>
+  </header>
+  <div id="shiftLabel">⏱️ Timer Shift: <span id="shiftTime">120</span> detik</div>
+  <div id="shiftBarWrap"><div id="shiftBar"></div></div>
+
+  <section id="orderBoard">
+    <h2>📋 Papan Pesanan — klik pesanan pelanggan dulu, lalu rakit di piring!</h2>
+    <div id="orders"></div>
+  </section>
+
+  <section id="kitchen">
+    <div class="panel">
+      <h2>🥬 Bahan di Counter <small>(klik atau tekan 1–6)</small></h2>
+      <div id="ingredients"></div>
+      <p style="margin-top:10px;font-size:14px">Keyboard: <kbd>1</kbd>–<kbd>6</kbd> pilih bahan &nbsp; <kbd>Space</kbd>/<kbd>Enter</kbd> sajikan &nbsp; <kbd>P</kbd> pause &nbsp; <kbd>R</kbd> restart</p>
+    </div>
+    <div class="panel" id="plateArea">
+      <h2>🍽️ Piring &amp; Wajan</h2>
+      <div id="plate">🍽️</div>
+      <div id="plateContents"></div>
+      <div id="cookBarWrap"><div id="cookBar"></div></div>
+      <div id="cookStatus">Pilih pesanan, lalu klik bahan.</div>
+      <button class="btn warn" id="cookBtn">🔥 Masak (2 detik)</button>
+      <button class="btn" id="serveBtn">🍽️ Sajikan! (Space)</button>
+      <button class="btn grey" id="clearBtn">🗑️ Buang Isi Piring</button>
+    </div>
+  </section>
+  <div id="msg"></div>
+  <div id="log">👋 Selamat datang di Warung Nusantara! Klik <b>Mulai Shift</b> untuk mulai masak.</div>
+</div>
+
+<div class="overlay" id="startScreen">
+  <div class="card">
+    <h2>🍳 Dapur Kilat<br>Warung Nusantara</h2>
+    <p><b>Cara main:</b> Pelanggan datang dan memesan di <b>papan pesanan</b>. Klik pesanan pelanggan, klik bahan-bahan di counter sesuai resep, tekan <b>Masak</b>, lalu <b>Sajikan</b> ke pelanggan yang benar sebelum timer pesanan habis!</p>
+    <p>🍚 <b>Nasi Goreng</b> = Nasi + Telur + Bumbu + Sayur &nbsp;|&nbsp; 🍜 <b>Mie Goreng</b> = Mie + Telur + Bumbu + Ayam<br>🍢 <b>Sate Ayam</b> = Ayam + Bumbu + Sayur &nbsp;|&nbsp; 🍲 <b>Soto Ayam</b> = Ayam + Nasi + Sayur + Bumbu + Telur</p>
+    <p>Target hari ini: <b>150 koin dalam 120 detik</b>. Pesanan kadaluarsa atau sajian salah mengurangi ⭐. Combo berturut-turut menaikkan koin!</p>
+    <p>Keyboard: <kbd>1</kbd>–<kbd>6</kbd> bahan, <kbd>Space</kbd> sajikan, <kbd>P</kbd> pause, <kbd>R</kbd> restart. Mouse: klik semuanya.</p>
+    <button class="btn" id="startBtn" style="font-size:20px;padding:14px 28px">▶️ Mulai Shift (120 detik)</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="pauseScreen">
+  <div class="card"><h2>⏸️ Jeda</h2><p>Shift dijeda. Tarik napas dulu, chef!</p>
+  <button class="btn" id="resumeBtn">▶️ Lanjutkan (P)</button>
+  <button class="btn grey" id="restartBtn2">🔄 Mulai Ulang (R)</button></div>
+</div>
+
+<div class="overlay hidden" id="endScreen">
+  <div class="card"><h2 id="endTitle">🎉 Shift Selesai!</h2><p id="endText"></p>
+  <button class="btn" id="restartBtn">🔄 Main Lagi (R)</button></div>
+</div>
+
+<script>
+"use strict";
+const INGREDIENTS=[
+  {id:'nasi', name:'Nasi', icon:'🍚', key:'1'},
+  {id:'mie', name:'Mie', icon:'🍜', key:'2'},
+  {id:'ayam', name:'Ayam', icon:'🍗', key:'3'},
+  {id:'telur', name:'Telur', icon:'🥚', key:'4'},
+  {id:'sayur', name:'Sayur', icon:'🥬', key:'5'},
+  {id:'bumbu', name:'Bumbu', icon:'🌶️', key:'6'},
+];
+const RECIPES=[
+  {dish:'Nasi Goreng', icon:'🍚', needs:['nasi','telur','bumbu','sayur'], price:25},
+  {dish:'Mie Goreng', icon:'🍜', needs:['mie','telur','bumbu','ayam'], price:30},
+  {dish:'Sate Ayam', icon:'🍢', needs:['ayam','bumbu','sayur'], price:35},
+  {dish:'Soto Ayam', icon:'🍲', needs:['ayam','nasi','sayur','bumbu','telur'], price:40},
+];
+const CUSTOMERS=['👩','👨','👵','👧','🧕','👴','👦','👩‍🦰'];
+const $=id=>document.getElementById(id);
+let state=null;
+let audioCtx=null;
+function beep(freq,dur=0.12,type='sine',vol=0.15){
+  try{
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type=type;o.frequency.value=freq;g.gain.value=vol;
+    o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
+}
+function sfx(kind){
+  if(kind==='pick')beep(600,0.08,'square',0.08);
+  else if(kind==='cook')beep(300,0.2,'sawtooth',0.08);
+  else if(kind==='serve'){beep(523,0.1);setTimeout(()=>beep(659,0.1),90);setTimeout(()=>beep(784,0.15),180);}
+  else if(kind==='bad'){beep(160,0.25,'sawtooth',0.12);}
+  else if(kind==='win'){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,0.18),i*130));}
+}
+function newState(){
+  return {running:false,paused:false,shift:120,coins:0,combo:0,bestCombo:0,served:0,stars:3,day:1,
+    target:150,selected:null,plate:[],cooking:false,cookProgress:0,cooked:false,orders:[],nextCust:0,over:false};
+}
+function log(t){ $('log').textContent=t; }
+function msg(t){ $('msg').textContent=t; }
+function ingById(id){ return INGREDIENTS.find(i=>i.id===id); }
+function spawnOrder(){
+  const r=RECIPES[Math.floor(Math.random()*RECIPES.length)];
+  const o={id:Date.now()+Math.random(),recipe:r,cust:CUSTOMERS[state.nextCust++%CUSTOMERS.length],
+    time:28+Math.floor(Math.random()*8),max:35};
+  state.orders.push(o);
+}
+function renderIngredients(){
+  $('ingredients').innerHTML=INGREDIENTS.map(i=>
+    `<div class="ing" data-id="${i.id}" title="${i.name} (tombol ${i.key})"><span class="ic">${i.icon}</span>${i.name}<br><span class="key">${i.key}</span></div>`).join('');
+  document.querySelectorAll('.ing').forEach(el=>el.addEventListener('click',()=>addIngredient(el.dataset.id)));
+}
+function renderOrders(){
+  $('orders').innerHTML=state.orders.map(o=>{
+    const pct=Math.max(0,Math.round(o.time/o.max*100));
+    return `<div class="order ${state.selected===o.id?'selected':''}" data-id="${o.id}">
+      <span class="badge">${o.time} dtk</span>
+      <span class="cust">${o.cust}</span>
+      <div class="dish">${o.recipe.icon} ${o.recipe.dish}</div>
+      <div class="recipe">${o.recipe.needs.map(n=>ingById(n).icon).join(' ')}</div>
+      <div class="otimer ${pct<30?'low':''}"><i style="width:${pct}%"></i></div>
+    </div>`;
+  }).join('') || '<p>Belum ada pesanan…</p>';
+  document.querySelectorAll('.order').forEach(el=>el.addEventListener('click',()=>{
+    state.selected=Number(el.dataset.id);state.plate=[];state.cooked=false;state.cookProgress=0;
+    const o=state.orders.find(x=>x.id===state.selected);
+    msg('Pesanan dipilih: '+o.recipe.dish+' — rakit '+o.recipe.needs.length+' bahan di piring!');
+    log('Memasak '+o.recipe.dish+' untuk '+o.cust);
+    beep(700,0.08,'square',0.08); render();
+  }));
+}
+function renderPlate(){
+  $('plateContents').textContent=state.plate.map(id=>ingById(id).icon).join(' ');
+  $('plate').textContent=state.cooked?'🍽️✨':(state.plate.length?state.plate.map(id=>ingById(id).icon).join(''):'🍽️');
+  $('cookBar').style.width=(state.cookProgress*100)+'%';
+  $('cookStatus').textContent=state.cooking?'🔥 Sedang dimasak…':
+    state.cooked?'✅ Matang! Siap disajikan — tekan Space / Sajikan!':
+    state.selected?('Rakit: '+state.plate.length+' bahan di piring.'):'Pilih pesanan, lalu klik bahan.';
+  $('stars').textContent='⭐'.repeat(Math.max(0,state.stars));
+  $('coins').textContent=state.coins; $('target').textContent=state.target;
+  $('combo').textContent='x'+(1+Math.min(state.combo,5));
+  $('day').textContent=state.day; $('served').textContent=state.served;
+  $('shiftTime').textContent=Math.max(0,Math.ceil(state.shift));
+  $('shiftBar').style.width=Math.max(0,state.shift/120*100)+'%';
+}
+function render(){ renderOrders(); renderPlate(); }
+function addIngredient(id){
+  if(!state.running||state.paused||state.cooking)return;
+  if(!state.selected){ msg('⚠️ Klik pesanan pelanggan di papan pesanan dulu!'); sfx('bad'); return; }
+  const o=state.orders.find(x=>x.id===state.selected);
+  if(!o){ msg('Pesanan itu sudah tidak ada.'); return; }
+  if(state.cooked){ msg('Hidangan sudah matang — sajikan dulu!'); return; }
+  if(state.plate.includes(id)){ msg('Bahan itu sudah ada di piring.'); return; }
+  if(!o.recipe.needs.includes(id)){
+    state.combo=0; msg('❌ '+ingById(id).name+' bukan bahan '+o.recipe.dish+'! Combo hilang.');
+    $('plateArea').classList.add('shake'); setTimeout(()=>$('plateArea').classList.remove('shake'),300);
+    sfx('bad'); render(); return;
+  }
+  state.plate.push(id); sfx('pick');
+  msg('Ditambah: '+ingById(id).icon+' '+ingById(id).name+' ('+state.plate.length+'/'+o.recipe.needs.length+')');
+  render();
+}
+function cook(){
+  if(!state.running||state.paused||state.cooking||state.cooked)return;
+  const o=state.orders.find(x=>x.id===state.selected);
+  if(!o){ msg('⚠️ Pilih pesanan dulu!'); return; }
+  if(state.plate.length!==o.recipe.needs.length){ msg('⚠️ Bahan belum lengkap: '+state.plate.length+'/'+o.recipe.needs.length); sfx('bad'); return; }
+  state.cooking=true; state.cookProgress=0; sfx('cook'); msg('🔥 Memasak '+o.recipe.dish+'…');
+}
+function serve(){
+  if(!state.running||state.paused)return;
+  const o=state.orders.find(x=>x.id===state.selected);
+  if(!o){ msg('⚠️ Pilih pesanan dulu!'); return; }
+  if(!state.cooked){ msg('⚠️ Masak dulu sampai matang (tombol Masak)!'); sfx('bad'); return; }
+  const mult=1+Math.min(state.combo,5);
+  const earned=o.recipe.price*mult;
+  state.coins+=earned; state.served++; state.combo++;
+  state.bestCombo=Math.max(state.bestCombo,state.combo);
+  state.orders=state.orders.filter(x=>x.id!==o.id);
+  state.selected=null; state.plate=[]; state.cooked=false; state.cookProgress=0;
+  msg('🎉 '+o.recipe.dish+' disajikan! +'+earned+' koin (combo x'+mult+')');
+  log('Disajikan: '+o.recipe.dish+' ke '+o.cust+' — +'+earned+' koin.');
+  sfx('serve'); spawnOrder(); render();
+  if(state.coins>=state.target) endGame(true);
+}
+function endGame(win){
+  state.running=false; state.over=true;
+  $('endTitle').textContent=win?'🎉 Menang! Target Tercapai!':'⏰ Shift Berakhir!';
+  $('endText').textContent=(win?'Kamu mencapai target '+state.target+' koin! ':'Waktu shift habis. ')+
+    'Koin: '+state.coins+' • Sajian: '+state.served+' • Combo terbaik: x'+(1+state.bestCombo)+' • Bintang: '+state.stars+'/3. '+
+    (win?'Warung Nusantara makin ramai!':'Coba lagi, chef — pelanggan menunggumu!');
+  $('endScreen').classList.remove('hidden');
+  if(win)sfx('win'); else sfx('bad');
+}
+function startGame(){
+  state=newState(); state.running=true;
+  $('startScreen').classList.add('hidden'); $('endScreen').classList.add('hidden'); $('pauseScreen').classList.add('hidden');
+  spawnOrder(); spawnOrder(); spawnOrder();
+  msg('Shift dimulai! Pilih pesanan pertama.'); log('Shift Hari 1 dimulai — target 150 koin dalam 120 detik.');
+  render();
+}
+function tick(){
+  if(!state||!state.running||state.paused)return;
+  state.shift-=0.5;
+  if(state.cooking){
+    state.cookProgress+=0.25;
+    if(state.cookProgress>=1){ state.cooking=false; state.cooked=true; state.cookProgress=1; msg('✅ Matang! Siap disajikan!'); sfx('serve'); }
+  }
+  state.orders.forEach(o=>o.time-=0.5);
+  const expired=state.orders.filter(o=>o.time<=0);
+  expired.forEach(o=>{
+    state.orders=state.orders.filter(x=>x.id!==o.id);
+    state.stars--; state.combo=0;
+    if(state.selected===o.id){state.selected=null;state.plate=[];state.cooked=false;}
+    msg('⏰ Pesanan '+o.recipe.dish+' kadaluarsa! −1 ⭐'); sfx('bad'); spawnOrder();
+  });
+  if(state.stars<=0){ render(); endGame(false); return; }
+  if(state.shift<=0){ state.shift=0; render(); endGame(state.coins>=state.target); return; }
+  render();
+}
+setInterval(tick,500);
+$('startBtn').addEventListener('click',startGame);
+$('restartBtn').addEventListener('click',startGame);
+$('restartBtn2').addEventListener('click',startGame);
+$('resumeBtn').addEventListener('click',()=>{state.paused=false;$('pauseScreen').classList.add('hidden');});
+$('cookBtn').addEventListener('click',cook);
+$('serveBtn').addEventListener('click',serve);
+$('clearBtn').addEventListener('click',()=>{state.plate=[];state.cooked=false;state.cookProgress=0;render();});
+document.addEventListener('keydown',e=>{
+  if(e.key>='1'&&e.key<='6'){ const ing=INGREDIENTS[Number(e.key)-1]; if(ing)addIngredient(ing.id); }
+  else if(e.key===' '||e.key==='Enter'){ e.preventDefault(); if(state&&state.running&&!$('startScreen').classList.contains('hidden'))return; serve(); }
+  else if(e.key==='p'||e.key==='P'){ if(state&&state.running){state.paused=!state.paused;$('pauseScreen').classList.toggle('hidden',!state.paused);} }
+  else if(e.key==='r'||e.key==='R'){ startGame(); }
+});
+// Demo states for screenshots: ?shot=menu|ingredients|assembly|ready
+(function demo(){
+  const q=new URLSearchParams(location.search); const shot=q.get('shot');
+  state=newState(); renderIngredients(); render();
+  if(!shot)return;
+  startGame();
+  if(shot==='ingredients'){
+    state.selected=state.orders[0].id; addIngredient(state.orders[0].recipe.needs[0]);
+  }else if(shot==='assembly'){
+    state.selected=state.orders[0].id;
+    state.orders[0].recipe.needs.slice(0,3).forEach(id=>addIngredient(id));
+    msg('Merakit '+state.orders[0].recipe.dish+' — 3 dari '+state.orders[0].recipe.needs.length+' bahan…');
+  }else if(shot==='ready'){
+    state.selected=state.orders[0].id;
+    state.orders[0].recipe.needs.forEach(id=>addIngredient(id));
+    state.cooked=true; state.cookProgress=1;
+    msg('✅ Matang! Siap disajikan — tekan Space / Sajikan!');
+  }
+  state.paused=true; render();
+})();
+renderIngredients();
+</script>
+</body>
+</html>
